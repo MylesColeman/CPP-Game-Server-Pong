@@ -24,6 +24,9 @@ private:
 
     Ball m_ball;
 
+    int m_playerScore = 0;
+    int m_opponentScore = 0;
+
     void handle_client(sf::TcpSocket* client, int playerID);
     void broadcast_message(const std::string& message, sf::TcpSocket* sender);
 };

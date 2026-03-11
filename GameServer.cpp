@@ -121,7 +121,20 @@ void GameServer::gameLogic()
         }
 
         if (m_ball.position.y < -10.f || m_ball.position.y > Constants::WORLD_HEIGHT + 10.f) 
+        {
+            if (m_ball.position.y < -10.f) m_opponentScore++;
+            else m_playerScore++;
+
             m_ball.reset();
+
+            m_paddleX[0] = Constants::WORLD_WIDTH * 0.5f;
+            m_paddleX[1] = Constants::WORLD_WIDTH * 0.5f;
+
+            std::string scoreMsg = "Score: " + std::to_string(m_playerScore) + ", " + std::to_string(m_opponentScore) + "\n";
+            broadcast_message(scoreMsg, nullptr);
+    
+            broadcast_message("Paddle Reset: " + std::to_string(Constants::WORLD_WIDTH / 2.0f) + "\n", nullptr);
+        }
 
         std::string ballPos = "Ball: " + std::to_string(m_ball.position.x) + ", " + std::to_string(m_ball.position.y) + "\n";
 
