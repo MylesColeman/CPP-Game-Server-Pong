@@ -9,7 +9,7 @@
 // A thourough rework is necessary for SFML 3.0.
 
 GameServer::GameServer(unsigned short tcp_port, unsigned short udp_port) :
-    m_tcp_port(tcp_port), m_udp_port(udp_port) {}
+    m_tcp_port(tcp_port), m_udp_port(udp_port), m_ball(Constants::WORLD_WIDTH, Constants::WORLD_HEIGHT) {}
 
 // Binds to a port and then loops around.  For every client that connects,
 // we start a new thread receiving their messages.
@@ -52,7 +52,7 @@ void GameServer::tcp_start()
                 if (status != sf::Socket::Status::Done)
                     std::cerr << "Could not send ID to client" << num_clients << std::endl;
             }
-            std::thread(&GameServer::handle_client, this, client).detach();
+            std::thread(&GameServer::handle_client, this, client, num_clients).detach();
         }
     }
     // No need to call close of the listener.
@@ -100,9 +100,29 @@ void GameServer::udp_start()
     std::cout << "Server stopped" << std::endl;
 }
 
+void GameServer::gameLogic()
+{
+    sf::Clock clock;
+    while (true) 
+    {
+        float delta = clock.restart().asSeconds();
+
+        m_ball.update(delta);
+
+        if (m_ball.position.y < -1.f || m_ball.position.y > Constants::WORLD_HEIGHT + 0.5f) 
+            m_ball.reset();
+
+        std::string ballPos = "Ball: " + std::to_string(m_ball.position.x) + ", " + std::to_string(m_ball.position.y) + "\n";
+
+        broadcast_message(ballPos, nullptr);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
+
 // Loop around, receive messages from client and send them to all
 // the other connected clients.
-void GameServer::handle_client(sf::TcpSocket* client)
+void GameServer::handle_client(sf::TcpSocket* client, int playerID)
 {
     while (true)
         {
@@ -120,7 +140,24 @@ void GameServer::handle_client(sf::TcpSocket* client)
                 std::string message(payload);
                 std::cout << "Received message: " << message << std::endl;
 
-                broadcast_message(message, client);
+                if (message.find("Paddle: ") != std::string::npos) 
+                {
+                    try 
+                    {
+                        float localX = std::stof(message.substr(message.find(": ") + 2));
+                        float globalX = localX;
+
+                        if (playerID == 1) 
+                            globalX = Constants::WORLD_WIDTH - localX;
+
+                        m_paddleX[playerID] = globalX;
+
+                        std::string cleanMessage = message.substr(0, message.find_first_of('\n')) + "\n";
+                    broadcast_message(cleanMessage, client);
+                    } catch (...) {}
+                }
+                else
+                    broadcast_message(message + "\n", client);
             }
         }
 
@@ -151,7 +188,7 @@ void GameServer::broadcast_message(const std::string& message, sf::TcpSocket* se
         if (client != sender)
         {
             // SENDING
-            sf::Socket::Status status = client->send(message.c_str(), message.size() + 1) ;
+            sf::Socket::Status status = client->send(message.c_str(), message.size()) ;
             if (status != sf::Socket::Status::Done)
             {
                 std::cerr << "Error sending message to client" << std::endl;

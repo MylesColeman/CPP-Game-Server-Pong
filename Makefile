@@ -6,11 +6,11 @@ CPPFLAGS=
 LDLIBS=
 LIBS=
 CPP=g++
-OBJS=GameServer.o main.o
+OBJS=GameServer.o main.o Ball.o
 
 all: server
 
-server: GameServer.o $(OBJS)
+server: $(OBJS)
 	$(CPP) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $@ $(CFLAGS)
 
 %.o: %.cpp
