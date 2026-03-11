@@ -109,6 +109,17 @@ void GameServer::gameLogic()
 
         m_ball.update(delta);
 
+        if (m_ball.position.y < 1.2f && m_ball.velocity.y < 0)
+        {
+            if (std::abs(m_ball.position.x - m_paddleX[0]) < (Constants::PADDLE_WIDTH * 0.5f + 0.5f))
+                m_ball.velocity.y = std::abs(m_ball.velocity.y);
+        }
+        if (m_ball.position.y > 38.8f && m_ball.velocity.y > 0) 
+        {
+            if (std::abs(m_ball.position.x - m_paddleX[1]) < (Constants::PADDLE_WIDTH * 0.5f + 0.5f)) 
+                m_ball.velocity.y = -std::abs(m_ball.velocity.y);
+        }
+
         if (m_ball.position.y < -1.f || m_ball.position.y > Constants::WORLD_HEIGHT + 0.5f) 
             m_ball.reset();
 
