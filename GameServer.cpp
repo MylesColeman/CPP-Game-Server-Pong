@@ -120,7 +120,7 @@ void GameServer::gameLogic()
                 m_ball.velocity.y = -std::abs(m_ball.velocity.y);
         }
 
-        if (m_ball.position.y < -1.f || m_ball.position.y > Constants::WORLD_HEIGHT + 0.5f) 
+        if (m_ball.position.y < -10.f || m_ball.position.y > Constants::WORLD_HEIGHT + 10.f) 
             m_ball.reset();
 
         std::string ballPos = "Ball: " + std::to_string(m_ball.position.x) + ", " + std::to_string(m_ball.position.y) + "\n";
