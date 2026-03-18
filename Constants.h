@@ -6,6 +6,7 @@ namespace Constants {
     constexpr float WORLD_HEIGHT = 40.f;
 
     constexpr float PADDLE_WIDTH = 2.5f;
+    constexpr float PADDLE_SPEED = 5.f;
     
     constexpr float BALL_SPEED = 22.f;
 }

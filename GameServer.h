@@ -20,6 +20,8 @@ private:
     std::vector<sf::TcpSocket*> m_clients;
     std::mutex m_clients_mutex;
 
+    std::mutex m_paddle_mutex;
+    sf::Clock m_playerClocks[2];
     float m_paddleX[2] = { 0.f, 0.f };
 
     Ball m_ball;

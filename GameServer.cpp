@@ -168,17 +168,37 @@ void GameServer::handle_client(sf::TcpSocket* client, int playerID)
                 {
                     try 
                     {
-                        float localX = std::stof(message.substr(message.find(": ") + 2));
-                        float globalX = localX;
+                        float rawX = std::stof(message.substr(message.find(": ") + 2));
+                        float delta = m_playerClocks[playerID].restart().asSeconds();
 
-                        if (playerID == 1) 
-                            globalX = Constants::WORLD_WIDTH - localX;
+                        {
+                            std::lock_guard<std::mutex> lock(m_paddle_mutex);
+                            float previousX = m_paddleX[playerID];
+                            float globalX = rawX;
 
-                        m_paddleX[playerID] = globalX;
+                            if (playerID == 1) globalX = Constants::WORLD_WIDTH - rawX;
 
-                        std::string cleanMessage = message.substr(0, message.find_first_of('\n')) + "\n";
-                    broadcast_message(cleanMessage, client);
-                    } catch (...) {}
+                            float distance = std::abs(globalX - previousX);
+                            float maxDistance = Constants::PADDLE_SPEED * delta;
+
+                            if (distance > maxDistance && delta > 0) 
+                            {
+                                std::cout << "Warning: Player " << playerID << " exceeded max speed! Clamping." << std::endl;
+                                float direction = (globalX > previousX) ? 1.0f : -1.0f;
+                                globalX = previousX + (direction * maxDistance);
+                            }
+
+                            float halfPaddle = Constants::PADDLE_WIDTH * 0.5f;
+                            globalX = std::max(halfPaddle, std::min(globalX, Constants::WORLD_WIDTH - halfPaddle));
+                            m_paddleX[playerID] = globalX;
+
+                            broadcast_message("Paddle " + std::to_string(playerID) + ": " + std::to_string(globalX) + "\n", client);
+                        }
+        
+                        
+
+                        
+                    } catch (...) { std::cerr << "Invalid paddle message from Player " << playerID << std::endl; }
                 }
                 else
                     broadcast_message(message + "\n", client);
@@ -200,9 +220,6 @@ void GameServer::broadcast_message(const std::string& message, sf::TcpSocket* se
 {
     // You might want to validate the message before you send it.
     // A few reasons for that:
-    // 1. Make sure the message makes sense in the game.
-    // 2. Make sure the sender is not cheating.
-    // 3. First need to synchronise the players inputs (usually done in Lockstep).
     // 4. Compensate for latency and perform rollbacks (usually done in Ded Reckoning).
     // 5. Delay the sending of messages to make the game fairer wrt high ping players.
     // This is where you can write the authoritative part of the server.
