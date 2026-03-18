@@ -136,11 +136,12 @@ void GameServer::gameLogic()
             broadcast_message("Paddle Reset: " + std::to_string(Constants::WORLD_WIDTH / 2.0f) + "\n", nullptr);
         }
 
-        std::string ballPos = "Ball: " + std::to_string(m_ball.position.x) + ", " + std::to_string(m_ball.position.y) + "\n";
+        std::string ballState = "Ball: " + std::to_string(m_ball.position.x) + ", " + std::to_string(m_ball.position.y) + 
+        ", " + std::to_string(m_ball.velocity.x) + ", " + std::to_string(m_ball.velocity.y) + "\n";
 
-        broadcast_message(ballPos, nullptr);
+        broadcast_message(ballState, nullptr);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(33));
     }
 }
 
@@ -214,7 +215,6 @@ void GameServer::handle_client(sf::TcpSocket* client, int playerID)
 // Sends `message` from `sender` to all the other connected clients
 void GameServer::broadcast_message(const std::string& message, sf::TcpSocket* sender)
 {
-    // 4. Compensate for latency and perform rollbacks (usually done in Ded Reckoning).
     std::lock_guard<std::mutex> lock(m_clients_mutex);
     for (auto& client : m_clients)
     {
