@@ -218,11 +218,7 @@ void GameServer::handle_client(sf::TcpSocket* client, int playerID)
 // Sends `message` from `sender` to all the other connected clients
 void GameServer::broadcast_message(const std::string& message, sf::TcpSocket* sender)
 {
-    // You might want to validate the message before you send it.
-    // A few reasons for that:
     // 4. Compensate for latency and perform rollbacks (usually done in Ded Reckoning).
-    // 5. Delay the sending of messages to make the game fairer wrt high ping players.
-    // This is where you can write the authoritative part of the server.
     std::lock_guard<std::mutex> lock(m_clients_mutex);
     for (auto& client : m_clients)
     {
