@@ -194,10 +194,6 @@ void GameServer::handle_client(sf::TcpSocket* client, int playerID)
 
                             broadcast_message("Paddle " + std::to_string(playerID) + ": " + std::to_string(globalX) + "\n", client);
                         }
-        
-                        
-
-                        
                     } catch (...) { std::cerr << "Invalid paddle message from Player " << playerID << std::endl; }
                 }
                 else
